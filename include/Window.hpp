@@ -6,6 +6,8 @@
 
 namespace KanCore::Graphics
 {
+    class Window; //Forward declaration for WindowDetails::getNativeWindow function
+
     struct WindowSettings
     {
         int width = 400;
@@ -63,9 +65,12 @@ namespace KanCore::Graphics
             static GlfwContextRAII context;
         }
 
+
+
         class IWindowPrivate
         {
         public:
+            //throws if window is not initialized
             virtual GLFWwindow* getContext() = 0;
         };
 
@@ -123,13 +128,18 @@ namespace KanCore::Graphics
             
             void onFrameRendered() override;
             std::chrono::steady_clock::time_point _lastFpsCheck;
+            std::chrono::steady_clock::time_point _lastFrameTime;
+
+            //frames between getFPS method call
             size_t _framesCount;
+            float _fps;
+
+            //duration between two frames
+            double _deltaTimeSeconds;
         public:
-            explicit Metrics(IWindowPrivate& window) 
-                : window(window), 
-                _framesCount(0),
-                _lastFpsCheck(std::chrono::steady_clock::now()) {}
-            float getFPS() noexcept;
+            explicit Metrics(IWindowPrivate& window);
+            float getFPS() const noexcept;
+            double getDeltaTimeSeconds() const noexcept;
         };
 
         class Properties
@@ -160,12 +170,21 @@ namespace KanCore::Graphics
             void makeCurrent() noexcept;
             void setVSync(bool enabled) noexcept;
         };
+
+
+        // For internal/advanced use only: returns raw GLFWwindow pointer.
+        // Do not use unless you know what you are doing.
+        inline GLFWwindow* getNativeWindow(WindowDetails::IWindowPrivate& window)
+        {
+            return window.getContext();
+        }
     }
 
     class Window : public WindowDetails::IWindowPrivate
     {
     private:
         GLFWwindow* glfwWindow;
+
 
         inline GLFWwindow* getContext() override
         {
@@ -186,15 +205,11 @@ namespace KanCore::Graphics
         Window(const std::string& title, const WindowPreset& preset);
         Window(const std::string& title, int width, int height);
 
-        bool isOpen() const
-        {
-            return glfwWindow && !glfwWindowShouldClose(glfwWindow);
-        }
-        void close()
-        {
-            if (glfwWindow)
-                glfwSetWindowShouldClose(glfwWindow, GLFW_TRUE);
-        }
+        bool isOpen() const;
+        void close() noexcept;
+
+        void endFrame() noexcept;
+        void newLayer() noexcept;
 
         explicit operator bool() const
         {

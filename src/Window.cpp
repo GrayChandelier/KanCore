@@ -3,6 +3,7 @@
 namespace KanCore::Graphics
 {
 
+	// -------------------- Window --------------------
 	void Window::initialize(const std::string& title, const WindowPreset& preset)
 	{
 		//initialize GLFW once
@@ -25,6 +26,34 @@ namespace KanCore::Graphics
 		properties.setDecorated(preset.window.decorated);
 		context.makeCurrent();
 		context.setVSync(preset.graphics.vsync);
+
+	}
+
+	bool Window::isOpen() const
+	{
+		return glfwWindow && !glfwWindowShouldClose(glfwWindow);
+	}
+	void Window::close() noexcept
+	{
+		if (glfwWindow)
+			glfwSetWindowShouldClose(glfwWindow, GLFW_TRUE);
+	}
+
+	void Window::endFrame() noexcept
+	{
+		if (!glfwWindow)
+			return;
+
+		glfwSwapBuffers(glfwWindow);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		metricsPrivate.onFrameRendered();
+	}
+	void Window::newLayer() noexcept
+	{
+		if (!glfwWindow)
+			return;
+
+		glClear(GL_DEPTH_BUFFER_BIT);
 	}
 
 	Window::Window(const std::string& title, const WindowPreset& preset)
@@ -133,20 +162,46 @@ namespace KanCore::Graphics::WindowDetails
 		glfwFocusWindow(context);
 	}
 	// -------------------- Metrics --------------------
+	Metrics::Metrics(IWindowPrivate& window)
+		: window(window)
+	{
+		auto now = std::chrono::steady_clock::now();
+		_lastFpsCheck = now;
+		_lastFrameTime = now;
+
+		_framesCount = 0;
+		_fps = 0;
+		 _deltaTimeSeconds = 0;
+	}
 	void Metrics::onFrameRendered()
 	{
+		using namespace std::chrono;
+		auto now = steady_clock::now();
+
+		auto delta = now - _lastFrameTime;
+		_deltaTimeSeconds = duration<double>(delta).count();
+		_lastFrameTime = now;
 		_framesCount++;
+
+		//FPS 
+		auto fpsCheckDuration = duration<double>(now - _lastFpsCheck).count();
+		if (fpsCheckDuration >= 1.0) 
+		{
+			_fps = static_cast<float>(_framesCount) / static_cast<float>(fpsCheckDuration);
+			
+			_lastFpsCheck = now;
+			_framesCount = 0;
+		}
 	}
 
-	float Metrics::getFPS() noexcept
+	float Metrics::getFPS() const noexcept
 	{ 
-		using namespace std::chrono; 
-		steady_clock::time_point currentTime = steady_clock::now();
-		float duration = duration_cast<seconds>(currentTime - _lastFpsCheck).count(); 
-		float fps = static_cast<float>(_framesCount) / duration; 
-		_framesCount = 0; 
-		_lastFpsCheck = currentTime;
-		return fps;
+		return _fps;
+	}
+	
+	double Metrics::getDeltaTimeSeconds() const noexcept
+	{
+		return _deltaTimeSeconds;
 	}
 
 	// -------------------- Properties --------------------
@@ -193,6 +248,7 @@ namespace KanCore::Graphics::WindowDetails
 		glfwMakeContextCurrent(context);
 		glfwSwapInterval(enabled ? 1 : 0);
 	}
+
 
 
 
