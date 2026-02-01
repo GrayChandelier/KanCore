@@ -5,6 +5,7 @@
 #include "include/Audio.hpp"
 
 #include <filesystem>
+
 int main()
 {
     using namespace KanCore;
@@ -22,12 +23,8 @@ int main()
     Audio::SoundBufferPtr buffer = Audio::loadFromFile("clarinet-46466.mp3");
     Audio::Sound sound(buffer);
 
-
-    audio.listener.setPosition({ 0,0,0 });
-    audio.listener.setDirection({ 0, 0, -1 });
-    audio.settings.setGlobalDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
-    
-    sound.looped(true).play({ {0,0,0}, {0,0,0}, {0,0,-1} });
+    sound.looped(true).setPitch(0.5f).play();
+ 
     Input::KeyEventListener keyboard = [&window, &events, &sound, &audio](Input::KeyboardEvent event)
         {
             if (event.action == Input::KeyboardAction::JustPressed)
@@ -49,7 +46,7 @@ int main()
                 else if (event.key == Input::KeyboardKey::D)
                 {
                     std::cout << "Listener moved\n";
-                    audio.listener.setPosition({ 0, 0, 10 });
+                   sound.setPosition({ 0, 0, 10 });
                 }
                
             }
@@ -102,6 +99,7 @@ int main()
     events.windowState.addListener(0, windowState);
 
     window.focus.gainFocus();
+
     while (window) 
     {
         events.pollEvents();

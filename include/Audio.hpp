@@ -148,7 +148,6 @@ namespace KanCore::Audio
         void pause();
         void resume();
         void play();
-        void play(const SpatialState& sourceSpatial);
 
         Sound& setVolume(float volume);
         Sound& setPitch(float pitch);
@@ -158,10 +157,22 @@ namespace KanCore::Audio
         Sound& rewindTo(std::chrono::duration<float> seconds);
         Sound& looped(bool flag);
 
+        //For 3D
+        Sound& setSpatialParams(
+            bool relative,
+            float referenceDistance,
+            float maxDistance,
+            float rolloff
+        );
+
         std::chrono::duration<float> getElapsedSeconds();
         bool isPlaying() const;
         bool isPaused() const;
         bool isStopped() const;
+
+        Sound& setPosition(const Vec3f& pos);
+        Vec3f getPosition() const;
+
     };
 
     class AudioContext

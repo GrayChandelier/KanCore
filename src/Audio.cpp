@@ -255,6 +255,8 @@ namespace KanCore::Audio
             sourceId = 0;
             throw std::runtime_error("Failed to attach buffer to source");
         }
+
+        setSpatialParams(false, 1.f, 100.f, 1.f);
     }
 
     Sound::Sound(Sound&& other) noexcept
@@ -301,19 +303,35 @@ namespace KanCore::Audio
         if (err != AL_NO_ERROR)
             throw std::runtime_error("OpenAL play failed: " + std::to_string(err));
     }
-    void Sound::play(const SpatialState& s)
+
+    Sound& Sound::setSpatialParams(
+        bool relative,
+        float referenceDistance,
+        float maxDistance,
+        float rolloff)
     {
         checkSource();
 
-        alSourcei(sourceId, AL_SOURCE_RELATIVE, AL_FALSE);
-        alSourcef(sourceId, AL_REFERENCE_DISTANCE, 1.0f);
-        alSourcef(sourceId, AL_MAX_DISTANCE, 100.0f);
-        alSourcef(sourceId, AL_ROLLOFF_FACTOR, 1.0f);
+        alSourcei(sourceId, AL_SOURCE_RELATIVE, relative ? AL_TRUE : AL_FALSE);
+        alSourcef(sourceId, AL_REFERENCE_DISTANCE, referenceDistance);
+        alSourcef(sourceId, AL_MAX_DISTANCE, maxDistance);
+        alSourcef(sourceId, AL_ROLLOFF_FACTOR, rolloff);
 
-        alSource3f(sourceId, AL_POSITION, s.position.x, s.position.y, s.position.z);
-        alSource3f(sourceId, AL_VELOCITY, s.velocity.x, s.velocity.y, s.velocity.z);
+        return *this;
+    }
+    Sound& Sound::setPosition(const Vec3f& pos)
+    {
+        checkSource();
+        alSource3f(sourceId, AL_POSITION, pos.x, pos.y, pos.z);
+        return *this;
+    }
 
-        alSourcePlay(sourceId);
+    Vec3f Sound::getPosition() const
+    {
+        checkSource();
+        Vec3f v;
+        alGetSource3f(sourceId, AL_POSITION, &v.x, &v.y, &v.z);
+        return v;
     }
 
     Sound& Sound::setVolume(float v) 
