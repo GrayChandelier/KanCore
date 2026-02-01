@@ -116,22 +116,24 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Lenovo\source\lib\freetype\include;C:\Users\Lenovo\source\lib\GLM;C:\Users\Lenovo\source\lib\glad\include;C:\Users\Lenovo\source\lib\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Lenovo\source\lib\libsndfile-1.2.2-win64\include;C:\Users\Lenovo\source\lib\openal-soft-1.25.1-bin\include;C:\Users\Lenovo\source\lib\freetype\include;C:\Users\Lenovo\source\lib\GLM;C:\Users\Lenovo\source\lib\glad\include;C:\Users\Lenovo\source\lib\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\Lenovo\source\lib\freetype\lib;C:\Users\Lenovo\source\lib\glfw\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\Lenovo\source\lib\libsndfile-1.2.2-win64\lib;C:\Users\Lenovo\source\lib\openal-soft-1.25.1-bin\libs\Win64;C:\Users\Lenovo\source\lib\freetype\lib;C:\Users\Lenovo\source\lib\glfw\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;opengl32.lib;freetype.lib;OpenAL32.lib;sndfile.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="EngineDevelopment.cpp" />
+    <ClCompile Include="src\Audio.cpp" />
     <ClCompile Include="src\Events.cpp" />
     <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Audio.hpp" />
     <ClInclude Include="include\Details.hpp" />
     <ClInclude Include="include\Events.hpp" />
     <ClInclude Include="include\InputDefines.hpp" />
