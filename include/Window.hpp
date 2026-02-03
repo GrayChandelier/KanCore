@@ -1,6 +1,9 @@
 #pragma once
 #include "Details.hpp"
+
+#include <GLAD/glad.h>
 #include <GLFW/glfw3.h>
+
 #include <string>
 #include <chrono>
 
@@ -53,7 +56,8 @@ namespace KanCore::Graphics
         private:
             GlfwContextRAII()
             {
-                if (!glfwInit()) throw std::runtime_error("GLFW init failed");
+                if (!glfwInit()) 
+                    throw std::runtime_error("GLFW init failed");
             }
         public:
             GlfwContextRAII(GlfwContextRAII&) = delete;
@@ -63,6 +67,7 @@ namespace KanCore::Graphics
         inline void initializeLibraries()
         {
             static GlfwContextRAII context;
+
         }
 
 

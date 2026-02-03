@@ -1,14 +1,30 @@
 ﻿#include <iostream>
+#include "include/OpenGL/GLVertexArray.hpp"
+#include "include/OpenGL/GLShader.hpp"
+
 #include "include/Window.hpp"
 #include "include/Events.hpp"
-
 #include "include/Audio.hpp"
 
-#include <filesystem>
+
+#include <fstream>
+std::string readFile(const std::string& path)
+{
+    std::ifstream file(path);
+
+    if (!file.is_open())
+        throw std::runtime_error("failed to open file: " + path);
+
+    std::string content((std::istreambuf_iterator<char>(file)),
+        std::istreambuf_iterator<char>());
+
+    return content;   
+}
+
 
 int main()
 {
-    using namespace KanCore;
+   using namespace KanCore;
 
     Graphics::WindowPreset preset;
     preset.window.resizable = false;
@@ -20,11 +36,13 @@ int main()
     Input::Events events(window);
 
     Audio::AudioContext audio;
-    Audio::SoundBufferPtr buffer = Audio::loadFromFile("clarinet-46466.mp3");
+    Audio::SoundBufferPtr buffer = Audio::loadFromFile("resources/Sounds12.mp3");
     Audio::Sound sound(buffer);
+   
+    sound.looped(true).play();
 
-    sound.looped(true).setPitch(0.5f).play();
- 
+
+    
     Input::KeyEventListener keyboard = [&window, &events, &sound, &audio](Input::KeyboardEvent event)
         {
             if (event.action == Input::KeyboardAction::JustPressed)
@@ -42,32 +60,7 @@ int main()
                     else
                         sound.pause();
                 }
-
-                else if (event.key == Input::KeyboardKey::D)
-                {
-                    std::cout << "Listener moved\n";
-                   sound.setPosition({ 0, 0, 10 });
-                }
                
-            }
-        };
-
-    std::vector<std::shared_ptr<Audio::Sound>> sounds;
-    Input::FileDropListener fileDrop = [&audio, &sounds](Input::FileDropEvent event) 
-        {
-            std::cout << "File drop event:\n";
-            for (auto& path : event.paths)
-            {
-                std::filesystem::path p(path);
-                if (p.extension() != ".wav")
-                    continue;
-
-                std::cout << "Play " << p.filename().string() << "\n";
-                Audio::SoundBufferPtr buffer = Audio::loadFromFile(path);
-                audio.sounds.saveBufferAs(p.filename().string(), buffer);
-                std::shared_ptr<Audio::Sound> sound = std::make_shared<Audio::Sound>(buffer);
-                sounds.push_back(sound);
-                sound->play();
             }
         };
 
@@ -92,17 +85,52 @@ int main()
             }
         };
 
-    window.context.setVSync(false);
+   
 
     events.keyboard.addListener(0, keyboard);
-    events.fileDrop.addListener(0, fileDrop);
     events.windowState.addListener(0, windowState);
 
+    window.context.setVSync(false);
     window.focus.gainFocus();
 
+    //========================
+
+    Vec3f positions[] =
+    {
+        {-0.5f, -0.5f, 0.f}, 
+        { 0.5f, -0.5f, 0.f}, 
+        { 0.5f,  0.5f, 0.f}, 
+        {-0.5f,  0.5f, 0.f}  
+    };
+    OpenGL::GLStaticVBO<Vec3f> vbo(positions);
+    const GLuint vboLocation = 0;
+    GLuint indices[] = { 0, 1, 2, 2, 3, 0 };
+    OpenGL::GLStaticVBO<GLuint> ebo(indices);
+    OpenGL::GLVertexArray vao;
+
+    vao.attachVertexBuffer(vboLocation, vbo);
+    vao.setAttributeFormat(vboLocation, 3, OpenGL::GLAttributeType::FLOAT, false, 0);
+    vao.setAttributeBinding(vboLocation, vboLocation);
+    vao.enableAttribute(vboLocation);
+    vao.attachElementBuffer(ebo);
+
+    OpenGL::GLShaderProgram program;
+    
+    {
+        std::string frag = readFile("resources/shader.frag");
+        std::string vert = readFile("resources/shader.vert");
+        OpenGL::GLShader fragment(frag, OpenGL::GLShaderType::FRAGMENT);
+        OpenGL::GLShader vertex(vert, OpenGL::GLShaderType::VERTEX);
+
+        OpenGL::linkShaderProgram(program, { fragment, vertex });
+    }
+
+    program.use();
+    vao.bind();
     while (window) 
     {
         events.pollEvents();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         window.endFrame();
     }
     return 0;

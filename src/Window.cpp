@@ -27,6 +27,14 @@ namespace KanCore::Graphics
 		context.makeCurrent();
 		context.setVSync(preset.graphics.vsync);
 
+
+		static std::atomic<bool> GLAD_INITED{false};
+		if (GLAD_INITED.load())
+			return;
+
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+			throw std::runtime_error("GLAD init failed");
+		GLAD_INITED.store(true);
 	}
 
 	bool Window::isOpen() const

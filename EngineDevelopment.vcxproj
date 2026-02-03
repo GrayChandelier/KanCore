@@ -130,6 +130,7 @@
     <ClCompile Include="EngineDevelopment.cpp" />
     <ClCompile Include="src\Audio.cpp" />
     <ClCompile Include="src\Events.cpp" />
+    <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +138,12 @@
     <ClInclude Include="include\Details.hpp" />
     <ClInclude Include="include\Events.hpp" />
     <ClInclude Include="include\InputDefines.hpp" />
+    <ClInclude Include="include\OpenGL\GLShader.hpp" />
+    <ClInclude Include="include\OpenGL\GLTexture.hpp" />
+    <ClInclude Include="include\OpenGL\GLTextureSampler.hpp" />
+    <ClInclude Include="include\OpenGL\GLVertexArray.hpp" />
+    <ClInclude Include="include\OpenGL\GLVertexBuffer.hpp" />
+    <ClInclude Include="include\Texture.hpp" />
     <ClInclude Include="include\Window.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
