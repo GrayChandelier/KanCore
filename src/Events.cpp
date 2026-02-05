@@ -199,7 +199,13 @@ namespace KanCore::Input
 		glfwSetWindowMaximizeCallback(context, [](GLFWwindow* w, int maximized)
 			{
 				Events* self = reinterpret_cast<Events*>(glfwGetWindowUserPointer(w));
+
+				int width, height;
+				glfwGetWindowSize(w, &width, &height);
+
 				if (self) self->windowMaximizeCallback(maximized);
+
+				
 			});
 		glfwSetFramebufferSizeCallback(context, [](GLFWwindow* w, int width, int height)
 			{
@@ -254,7 +260,8 @@ namespace KanCore::Input
 	void Events::windowSizeCallback(int width, int height)
 	{
 		WindowTransformEvent event{};
-		event.size = Vec2i{ width, height };
+		event.windowSize = Size2Di{ static_cast<size_t>(width), static_cast<size_t>(height) };
+		event.transformation = WindowTransformation::Resized;
 		static_cast<EventDetails::IWindowTransform&>(windowTransform).notify(event);
 	}
 
@@ -262,6 +269,7 @@ namespace KanCore::Input
 	{
 		WindowTransformEvent event{};
 		event.position = Vec2i{ xpos, ypos };
+		event.transformation = WindowTransformation::Moved;
 		static_cast<EventDetails::IWindowTransform&>(windowTransform).notify(event);
 	}
 
@@ -300,7 +308,8 @@ namespace KanCore::Input
 	void Events::framebufferSizeCallback(int width, int height)
 	{
 		WindowTransformEvent event{};
-		event.size = Vec2i{ width, height };
+		event.framebufferSize = Size2Di{ static_cast<size_t>(width), static_cast<size_t>(height) };
+		event.transformation = WindowTransformation::FramebufferResized;
 		static_cast<EventDetails::IWindowTransform&>(windowTransform).notify(event);
 	}
 

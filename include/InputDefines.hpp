@@ -149,6 +149,13 @@ namespace KanCore::Input
         Minimized,
         Closed
     };
+
+    enum class  WindowTransformation
+    {
+        Resized,
+        Moved,
+        FramebufferResized
+    };
     struct KeyboardEvent
     {
         KeyboardKey key;
@@ -175,7 +182,9 @@ namespace KanCore::Input
 
     struct WindowTransformEvent
     {
-        Vec2i size;
+        WindowTransformation transformation;
+        Size2Di windowSize;
+        Size2Di framebufferSize;
         Vec2i position;
     };
 

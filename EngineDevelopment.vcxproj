@@ -116,7 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Lenovo\source\lib\libsndfile-1.2.2-win64\include;C:\Users\Lenovo\source\lib\openal-soft-1.25.1-bin\include;C:\Users\Lenovo\source\lib\freetype\include;C:\Users\Lenovo\source\lib\GLM;C:\Users\Lenovo\source\lib\glad\include;C:\Users\Lenovo\source\lib\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Lenovo\source\lib\stb-master;C:\Users\Lenovo\source\lib\libsndfile-1.2.2-win64\include;C:\Users\Lenovo\source\lib\openal-soft-1.25.1-bin\include;C:\Users\Lenovo\source\lib\freetype\include;C:\Users\Lenovo\source\lib\GLM;C:\Users\Lenovo\source\lib\glad\include;C:\Users\Lenovo\source\lib\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -129,21 +129,24 @@
   <ItemGroup>
     <ClCompile Include="EngineDevelopment.cpp" />
     <ClCompile Include="src\Audio.cpp" />
+    <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Events.cpp" />
     <ClCompile Include="src\glad.c" />
+    <ClCompile Include="src\Image.cpp" />
     <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Audio.hpp" />
+    <ClInclude Include="include\Camera.hpp" />
     <ClInclude Include="include\Details.hpp" />
     <ClInclude Include="include\Events.hpp" />
+    <ClInclude Include="include\Image.hpp" />
     <ClInclude Include="include\InputDefines.hpp" />
     <ClInclude Include="include\OpenGL\GLShader.hpp" />
     <ClInclude Include="include\OpenGL\GLTexture.hpp" />
     <ClInclude Include="include\OpenGL\GLTextureSampler.hpp" />
     <ClInclude Include="include\OpenGL\GLVertexArray.hpp" />
     <ClInclude Include="include\OpenGL\GLVertexBuffer.hpp" />
-    <ClInclude Include="include\Texture.hpp" />
     <ClInclude Include="include\Window.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

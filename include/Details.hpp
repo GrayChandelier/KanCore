@@ -118,4 +118,13 @@ namespace KanCore
         Size2D() = default;
         Size2D(float w, float h) : width(w), height(h) {}
     };
+
+    struct Size2Di
+    {
+        size_t width = 0;
+        size_t height = 0;
+
+        Size2Di() = default;
+        Size2Di(size_t w, size_t h) : width(w), height(h) {}
+    };
 }

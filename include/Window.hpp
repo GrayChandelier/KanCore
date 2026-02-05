@@ -83,10 +83,15 @@ namespace KanCore::Graphics
         {
         private:
             IWindowPrivate& window;
+
+            
         public:
             explicit Transform(IWindowPrivate& window) : window(window) {}
-            void setSize(const Size2D& size);
-            Size2D getSize() const noexcept;
+            void setWindowSize(const Size2Di& size);
+            Size2Di getWindowSize() const noexcept;
+            Size2Di getFramebufferSize() const noexcept;
+            float getAspectRation() const noexcept;
+
         };
 
         class Cursor
@@ -174,6 +179,7 @@ namespace KanCore::Graphics
 
             void makeCurrent() noexcept;
             void setVSync(bool enabled) noexcept;
+            void setViewport(float x, float y, float width, float height) noexcept;
         };
 
 

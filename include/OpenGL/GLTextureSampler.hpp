@@ -44,9 +44,9 @@ namespace KanCore::OpenGL
 
 		GLTextureSampler(GLTextureSampler&) = delete;
 		GLTextureSampler(GLTextureSampler&& old) noexcept
-		{
-			samplerId = std::exchange(old.samplerId, 0);
+			: samplerId(std::exchange(old.samplerId, 0)) {
 		}
+
 		GLTextureSampler()
 		{
 			glCreateSamplers(1, &samplerId);

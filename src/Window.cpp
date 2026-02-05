@@ -98,18 +98,34 @@ namespace KanCore::Graphics::WindowDetails
 {
 	// -------------------- Transform --------------------
 
-	void Transform::setSize(const Size2D& size)
+	void Transform::setWindowSize(const Size2Di& size)
 	{
 		GLFWwindow* context = window.getContext();
 		glfwSetWindowSize(context, size.width, size.height);
 	}
-	Size2D Transform::getSize() const noexcept 
+	Size2Di Transform::getWindowSize() const noexcept 
 	{ 
 		GLFWwindow* context = window.getContext();
 		int x, y;
 
 		glfwGetWindowSize(context, &x, &y);
-		return Size2D{static_cast<float>(x), static_cast<float>(y)};
+		return Size2Di{static_cast<size_t>(x), static_cast<size_t>(y)};
+	}
+	Size2Di Transform::getFramebufferSize() const noexcept
+	{
+		GLFWwindow* context = window.getContext();
+		int x, y;
+
+		glfwGetFramebufferSize(context, &x, &y);
+		return Size2Di{ static_cast<size_t>(x), static_cast<size_t>(y) };
+	}
+	float Transform::getAspectRation() const noexcept
+	{
+		GLFWwindow* context = window.getContext();
+		int x, y;
+
+		glfwGetFramebufferSize(context, &x, &y);
+		return static_cast<float>(x) / static_cast<float>(y);
 	}
 
 	// -------------------- Cursor --------------------
@@ -256,7 +272,12 @@ namespace KanCore::Graphics::WindowDetails
 		glfwMakeContextCurrent(context);
 		glfwSwapInterval(enabled ? 1 : 0);
 	}
-
+	void Context::setViewport(float x, float y, float width, float height) noexcept
+	{
+		GLFWwindow* context = window.getContext();
+		glfwMakeContextCurrent(context);
+		glViewport(x, y, width, height);
+	}
 
 
 

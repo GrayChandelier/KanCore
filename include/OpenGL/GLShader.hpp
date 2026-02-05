@@ -118,7 +118,8 @@ namespace KanCore::OpenGL
 				char buffer[2048];
 				glGetProgramInfoLog(programId, sizeof(buffer), nullptr, buffer);
 				std::string info(buffer);
-				throw GLShaderException("Shader compile error: " + info);
+
+				std::cerr<<"Shader compile error: " + info<<"\n";
 			}
 		}
 
@@ -132,6 +133,13 @@ namespace KanCore::OpenGL
 		void use() const noexcept
 		{
 			glUseProgram(programId);
+		}
+		void setUniform1i(const std::string& name, int value) const
+		{
+			GLint location = glGetUniformLocation(programId, name.c_str());
+			if (location != -1)
+				glUniform1i(location, value);
+			
 		}
 		static void unbindShaders() noexcept
 		{
