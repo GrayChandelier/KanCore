@@ -74,5 +74,8 @@
     <ClInclude Include="include\Camera.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="include\OpenGL\GLFramebuffer.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

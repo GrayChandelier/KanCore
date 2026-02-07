@@ -84,6 +84,11 @@ namespace KanCore::OpenGL
 
 			return *this;
 		}
+
+		explicit operator bool() const noexcept
+		{
+			return static_cast<bool>(shaderId);
+		}
 		~GLShader() noexcept
 		{
 			destroy();
@@ -141,6 +146,19 @@ namespace KanCore::OpenGL
 				glUniform1i(location, value);
 			
 		}
+		void setUniform1f(const std::string& name, float value) const
+		{
+			GLint location = glGetUniformLocation(programId, name.c_str());
+			if (location != -1)
+				glUniform1f(location, value);
+
+		}
+		void setUniform2f(const std::string& name, float v1, float v2) const
+		{
+			GLint location = glGetUniformLocation(programId, name.c_str());
+			if (location != -1)
+				glUniform2f(location, v1, v2);
+		}
 		static void unbindShaders() noexcept
 		{
 			glUseProgram(0);
@@ -159,6 +177,12 @@ namespace KanCore::OpenGL
 
 			return *this;
 		}
+
+		explicit operator bool() const noexcept
+		{
+			return static_cast<bool>(programId);
+		}
+
 		~GLShaderProgram() noexcept
 		{
 			destroy();

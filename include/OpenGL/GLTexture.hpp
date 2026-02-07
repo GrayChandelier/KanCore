@@ -74,7 +74,15 @@ namespace KanCore::OpenGL
         {
             return 1 + static_cast<int>(std::floor(std::log2(std::max(width, height))));
         }
+
+        void destroy() noexcept
+        {
+            if (textureId)
+                glDeleteTextures(1, &textureId);
+        }
     public:
+        friend inline GLuint getGLHandle(const GLTexture2D& texture) noexcept { return texture.textureId; }
+
         GLTexture2D(
             GLsizei width,
             GLsizei height,
@@ -117,8 +125,8 @@ namespace KanCore::OpenGL
             if (level < 0 || level >= levels)
                 throw std::out_of_range("Mip level out of range");
 
-            GLsizei mipW = mipSize(width, level);
-            GLsizei mipH = mipSize(height, level);
+            GLsizei mipW = mipSize(this->width, level);
+            GLsizei mipH = mipSize(this->height, level);
 
             if (x < 0 || y < 0 || width <= 0 || height <= 0 ||
                 x + width > mipW || y + height > mipH)
@@ -186,8 +194,7 @@ namespace KanCore::OpenGL
         {
             if (this != &other)
             {
-                if (textureId)
-                    glDeleteTextures(1, &textureId);
+                destroy();
 
                 textureId = std::exchange(other.textureId, 0);
                 width = other.width;
@@ -197,10 +204,13 @@ namespace KanCore::OpenGL
             return *this;
         }
 
+        explicit operator bool() const noexcept
+        {
+            return static_cast<bool>(textureId);
+        }
         ~GLTexture2D() noexcept
         {
-            if (textureId)
-                glDeleteTextures(1, &textureId);
+            destroy();
         }
     };
 }

@@ -142,6 +142,7 @@
     <ClInclude Include="include\Events.hpp" />
     <ClInclude Include="include\Image.hpp" />
     <ClInclude Include="include\InputDefines.hpp" />
+    <ClInclude Include="include\OpenGL\GLFramebuffer.hpp" />
     <ClInclude Include="include\OpenGL\GLShader.hpp" />
     <ClInclude Include="include\OpenGL\GLTexture.hpp" />
     <ClInclude Include="include\OpenGL\GLTextureSampler.hpp" />

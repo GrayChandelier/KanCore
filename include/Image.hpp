@@ -17,7 +17,7 @@ namespace KanCore::Graphics
 
 	namespace ImageLoaders
 	{
-		void loadFromFile(Image& image, const std::string& path);
+		void loadFromFile(Image& image, const std::string& path, uint8_t desiredChannels = 4);
 	}
 
 	class Image
@@ -55,7 +55,7 @@ namespace KanCore::Graphics
 		{
 			return pixels;
 		}
-		inline void loadFromFile(const std::string& path)
+		inline void loadFromFile(const std::string& path, uint8_t desiredChannels = 4)
 		{
 			ImageLoaders::loadFromFile(*this, path);
 		}

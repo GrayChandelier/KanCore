@@ -253,5 +253,10 @@ namespace KanCore::OpenGL
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 
+		explicit operator bool() const noexcept
+		{
+			return static_cast<bool>(vbo.getId());
+		}
+
 	};
 }

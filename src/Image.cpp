@@ -4,6 +4,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <iostream>
 namespace KanCore::Graphics::ImageDetails
 {
 	void fillImage(Image& target, Size2Di size, uint8_t channels, std::span<uint8_t> pixels)
@@ -19,7 +20,7 @@ namespace KanCore::Graphics::ImageDetails
 
 namespace KanCore::Graphics::ImageLoaders
 {
-	void loadFromFile(Image& image, const std::string& path)
+	void loadFromFile(Image& image, const std::string& path, uint8_t desiredChannels)
 	{
 		if (path.empty())
 			throw std::invalid_argument("Failed to load image: empty file path");
@@ -27,7 +28,7 @@ namespace KanCore::Graphics::ImageLoaders
 		int width, height, channels;
 
 		stbi_set_flip_vertically_on_load(true);
-		uint8_t* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+		unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, desiredChannels);
 
 		if (!data)
 		{
@@ -38,13 +39,17 @@ namespace KanCore::Graphics::ImageLoaders
 			);
 		}
 
-		Graphics::ImageDetails::fillImage(image, Size2Di{ static_cast<size_t>(width), static_cast<size_t>(height) }, channels, { data, static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(channels) });
+		Graphics::ImageDetails::fillImage(image, Size2Di{ static_cast<size_t>(width), 
+			static_cast<size_t>(height) }, 
+			desiredChannels, 
+			{ data, static_cast<size_t>(width) * static_cast<size_t>(height) * desiredChannels }
+		);
 		stbi_image_free(data);
 	}
-	Image loadFromFile(const std::string& path)
+	Image loadFromFile(const std::string& path, uint8_t desiredChannels = 4)
 	{
 		Image image;
-		loadFromFile(image, path);
+		loadFromFile(image, path, desiredChannels);
 		return image;
 	}
 }
