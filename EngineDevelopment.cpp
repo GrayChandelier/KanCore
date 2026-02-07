@@ -15,7 +15,7 @@
 
 #include "include/Threads.hpp"
 #include "include/Scheduler.hpp"
-
+#include "include/Stopwatch.hpp"
 std::string readFile(const std::string& path)
 {
     std::ifstream file(path);
@@ -30,15 +30,21 @@ int main()
 {
     using namespace KanCore;
 
-    Utils::Scheduler scheduler;
+    using namespace KanCore::Utils;
 
-    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-    auto task = [now]()
+    Scheduler scheduler;
+    Stopwatch stopwatch;
+
+    auto func = [&stopwatch]() 
         {
-            std::chrono::steady_clock::time_point finished = std::chrono::steady_clock::now();
-            std::cout << "Duration: " << std::chrono::duration_cast<std::chrono::milliseconds>(finished - now).count() << " ms\n";
+            std::cout << "Elapsed: " << stopwatch.elapsedSinceStartMs() << " ms\n";
         };
-    scheduler.schedule(std::chrono::milliseconds(2605), task);
+    scheduler.schedule(milliseconds(200), func);
+    scheduler.schedule(milliseconds(400), func);
+    scheduler.schedule(milliseconds(600), func);
+    scheduler.schedule(milliseconds(800), func);
+    scheduler.schedule(milliseconds(1000), func);
+
     Graphics::WindowPreset preset;
     preset.window.width = 1600;
     preset.window.height = 900;

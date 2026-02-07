@@ -9,6 +9,9 @@
 
 namespace KanCore::Utils
 {
+    using seconds = std::chrono::seconds;
+    using milliseconds = std::chrono::milliseconds;
+
     class Scheduler
     {
     private:
@@ -36,7 +39,7 @@ namespace KanCore::Utils
             F&& f, Args&&... args)
         {
             auto execTime = std::chrono::steady_clock::now() + delay;
-            Task task = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
+            std::function<void()> task = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
 
             {
                 std::lock_guard lock(mutex);
