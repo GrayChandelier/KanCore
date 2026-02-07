@@ -5,178 +5,89 @@
 #include <functional>
 #include <mutex>
 #include <future>
-#include <atomic>
-#include <semaphore>
-#include <optional>
-#include <memory>
-
-namespace KanCore::Threads
+namespace KanCore::Utils
 {
-    using Task = std::function<void()>;
-    using TaskPriority = uint16_t;
+	class ThreadPool
+	{
+	private:
+		std::vector<std::thread> workers;
+		std::queue<std::function<void()>> tasks;
 
-    struct TaskUnit
-    {
-        Task task;
-        TaskPriority priority;
+		std::mutex queueMutex;
+		std::condition_variable condition;
 
-        struct Comparator
-        {
-            bool operator()(const TaskUnit& first, const TaskUnit& second) const
-            {
-                return first.priority > second.priority;
-            }
-        };
+		bool stopAll;
 
-        TaskUnit(TaskUnit&& other) noexcept
-            : task(std::move(other.task)), priority(other.priority) {
-        }
-        TaskUnit& operator=(TaskUnit&& other) noexcept
-        {
-            task = std::move(other.task);
-            priority = other.priority;
-            return *this;
-        }
-        TaskUnit() = default;
-        TaskUnit(const TaskUnit&) = delete;
-        TaskUnit& operator=(const TaskUnit&) = delete;
-    };
+		void resolveException(const std::exception& ex)
+		{
+			printf("Failed to execute thread pool task: %s\n", ex.what());
+		}
+		void workerLoop()
+		{
+			while (true)
+			{
+				std::unique_lock<std::mutex> lock(queueMutex);
 
-    template<typename T>
-    class LockFreeQueue
-    {
-    private:
-        std::vector<std::optional<T>> buffer;
-        std::atomic<size_t> head{ 0 };
-        std::atomic<size_t> tail{ 0 };
-        size_t capacity;
+				condition.wait(lock, [this]() {return stopAll || !tasks.empty(); });
 
-    public:
-        explicit LockFreeQueue(size_t cap = 1024) : buffer(cap), capacity(cap) {}
+				if (tasks.empty() && stopAll) return;
 
-        bool push(T item)
-        {
-            size_t currentTail = tail.load(std::memory_order_relaxed);
-            size_t nextTail = (currentTail + 1) % capacity;
+				if (tasks.empty()) continue;
 
-            if (nextTail == head.load(std::memory_order_acquire))
-                return false; 
+				auto task = tasks.front();
+				tasks.pop();
 
-            buffer[currentTail] = std::move(item);
-            tail.store(nextTail, std::memory_order_release);
-            return true;
-        }
+				try
+				{
+					task();
+				}
+				catch (const std::exception& ex)
+				{
+					resolveException(ex);
+				}
+			}
+		}
+	public:
 
-        std::optional<T> pop()
-        {
-            size_t currentHead = head.load(std::memory_order_relaxed);
+		template<typename F, typename... Args>
+		auto enqueue(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>>
+		{
+			using ReturnType = std::invoke_result_t<F, Args...>;
 
-            if (currentHead == tail.load(std::memory_order_acquire))
-                return std::nullopt; 
+			auto taskPtr = std::make_shared<std::packaged_task<ReturnType()>>(
+				std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+			);
 
-            std::optional<T> item = std::move(buffer[currentHead]);
-            buffer[currentHead].reset();
+			std::future<ReturnType> res = taskPtr->get_future();
 
-            head.store((currentHead + 1) % capacity, std::memory_order_release);
-            return item;
-        }
+			{
+				std::lock_guard<std::mutex> lock(queueMutex);
+				tasks.push([taskPtr]() { (*taskPtr)(); });
+			}
 
-        bool isEmpty() const
-        {
-            return head.load() == tail.load();
-        }
-    };
+			condition.notify_one();
+			return res;
+		}
 
-    class ThreadPool
-    {
-    private:
-        using Semaphore = std::counting_semaphore<>;
-        Semaphore semaphore{ 0 };
+		ThreadPool(size_t workersCount = std::thread::hardware_concurrency()) 
+			: stopAll(false)
+		{
+			for (int it = 0; it < workersCount; it++)
+				workers.push_back(std::thread([this]() {workerLoop(); }));
+			
+		}
 
-        std::priority_queue<TaskUnit, std::vector<TaskUnit>, TaskUnit::Comparator> nonLockFreeTasks;
-        LockFreeQueue<TaskUnit> sortedLockFreeTasks{ 4096 };
-        std::mutex enqueueMutex;
-
-        std::vector<std::thread> workers;
-        std::atomic<bool> stopped{ false };
-
-        void workerLoop()
-        {
-            while (!stopped.load())
-            {
-                semaphore.acquire(); 
-
-                auto optTask = sortedLockFreeTasks.pop();
-                if (!optTask.has_value())
-                    continue;
-
-                try
-                {
-                    optTask->task();
-                }
-                catch (const std::exception& ex)
-                {
-                    printf("Task failed: %s\n", ex.what());
-                }
-            }
-        }
-
-    public:
-        ThreadPool(size_t workersCount = std::thread::hardware_concurrency() - 1)
-        {
-            for (size_t i = 0; i < workersCount; ++i)
-                workers.emplace_back([this]() { workerLoop(); });
-        }
-
-        void stop()
-        {
-            stopped.store(true);
-
-            for (size_t i = 0; i < workers.size(); ++i)
-                semaphore.release();
-
-            for (auto& w : workers)
-                w.join();
-        }
-
-        template<typename F, typename... Args>
-        auto enqueue(TaskPriority priority, F&& f, Args&&... args)
-            -> std::future<std::invoke_result_t<F, Args...>>
-        {
-            using ReturnType = std::invoke_result_t<F, Args...>;
-
-            // создаём task, который захватывает аргументы
-            auto taskPtr = std::make_shared<std::packaged_task<ReturnType()>>(
-                [func = std::forward<F>(f), ... capturedArgs = std::forward<Args>(args)]() mutable {
-                    return func(capturedArgs...);
-                }
-            );
-
-            std::future<ReturnType> res = taskPtr->get_future();
-
-            TaskUnit unit;
-            unit.task = [taskPtr]() { (*taskPtr)(); };
-            unit.priority = priority;
-
-            TaskUnit topTask;
-            {
-                std::lock_guard lock(enqueueMutex);
-                nonLockFreeTasks.emplace(std::move(unit));
-                topTask = std::move(const_cast<TaskUnit&>(nonLockFreeTasks.top()));
-                nonLockFreeTasks.pop();
-            }
-
-            while (!sortedLockFreeTasks.push(std::move(topTask)))
-                std::this_thread::yield();
-
-            semaphore.release();
-            return res;
-        }
+		~ThreadPool()
+		{
+			{
+				std::unique_lock<std::mutex> lock(queueMutex);
+				stopAll = true;
+			}
+			condition.notify_all();
+			for (auto& worker : workers)
+				worker.join();
+		}
 
 
-        ~ThreadPool()
-        {
-            stop();
-        }
-    };
+	};
 }

@@ -29,20 +29,6 @@ int main()
 {
     using namespace KanCore;
 
-    
-    KanCore::Threads::ThreadPool threads;
-
-    auto func = [](int id) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        printf("Task %i finished\n", id);
-        };
-
-    for (int i = 0; i < 50; i++)
-    {
-        threads.enqueue(50-i, func, i);
-    }
-    
-
     Graphics::WindowPreset preset;
     preset.window.width = 1600;
     preset.window.height = 900;
@@ -65,13 +51,14 @@ int main()
             {
                 if (event.key == Input::KeyboardKey::F && events.keyboard.isKeyPressed(Input::KeyboardKey::LeftControl))
                     std::cout << "\rFPS: " << window.metrics.getFPS() << "\n";
-                if (event.key == Input::KeyboardKey::Pause)
+                if (event.key == Input::KeyboardKey::Home)
                 {
                     std::cout << "Play sound\n";
                     bool flag = sound.isPaused();
                     if (flag) sound.resume();
                     else sound.pause();
                 }
+           
             }
         };
 
