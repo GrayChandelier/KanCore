@@ -13,6 +13,8 @@
 #include <fstream>
 #include <algorithm> // std::clamp
 
+#include "include/Threads.hpp"
+
 std::string readFile(const std::string& path)
 {
     std::ifstream file(path);
@@ -26,6 +28,20 @@ std::string readFile(const std::string& path)
 int main()
 {
     using namespace KanCore;
+
+    
+    KanCore::Threads::ThreadPool threads;
+
+    auto func = [](int id) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        printf("Task %i finished\n", id);
+        };
+
+    for (int i = 0; i < 50; i++)
+    {
+        threads.enqueue(50-i, func, i);
+    }
+    
 
     Graphics::WindowPreset preset;
     preset.window.width = 1600;

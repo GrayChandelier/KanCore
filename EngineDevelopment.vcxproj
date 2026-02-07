@@ -148,6 +148,7 @@
     <ClInclude Include="include\OpenGL\GLTextureSampler.hpp" />
     <ClInclude Include="include\OpenGL\GLVertexArray.hpp" />
     <ClInclude Include="include\OpenGL\GLVertexBuffer.hpp" />
+    <ClInclude Include="include\Threads.hpp" />
     <ClInclude Include="include\Window.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
