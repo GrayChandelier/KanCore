@@ -14,6 +14,7 @@
 #include <algorithm> // std::clamp
 
 #include "include/Threads.hpp"
+#include "include/Scheduler.hpp"
 
 std::string readFile(const std::string& path)
 {
@@ -29,6 +30,15 @@ int main()
 {
     using namespace KanCore;
 
+    Utils::Scheduler scheduler;
+
+    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+    auto task = [now]()
+        {
+            std::chrono::steady_clock::time_point finished = std::chrono::steady_clock::now();
+            std::cout << "Duration: " << std::chrono::duration_cast<std::chrono::milliseconds>(finished - now).count() << " ms\n";
+        };
+    scheduler.schedule(std::chrono::milliseconds(2605), task);
     Graphics::WindowPreset preset;
     preset.window.width = 1600;
     preset.window.height = 900;
@@ -58,7 +68,6 @@ int main()
                     if (flag) sound.resume();
                     else sound.pause();
                 }
-           
             }
         };
 
