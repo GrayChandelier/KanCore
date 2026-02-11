@@ -48,13 +48,6 @@ int main()
 
 
     sound.looped(true).play();
-    
-
-    KanCore::Graphics::DynamicTextureAtlas2D atlas(
-        { 512, 512 },
-        OpenGL::TextureInternalFormat::RGBA8,
-        std::make_unique<KanCore::Graphics::TextureAtlasDetails::MaxRectsStrategy>(), 0
-    );
 
 
 
@@ -112,40 +105,8 @@ int main()
             }
         };
 
-    Input::FileDropListener fileDrop = [&atlas](Input::FileDropEvent event)
-        {
-            std::vector<Graphics::Image> images;
-            for (auto& path : event.paths)
-            {
 
-                std::cout << "Try to load texture: " << path << "\n";
-                Graphics::Image image;
-                image.loadFromFile(path);
-                images.push_back(std::move(image));
-            }
 
-            auto comparator = [](const Graphics::Image& A, const Graphics::Image& B)
-                {
-                    uint32_t areaA = A.getSize().width * A.getSize().height;
-                    uint32_t areaB = B.getSize().width * B.getSize().height;
-
-                    return areaA >= areaB;
-                };
-
-            std::sort(images.begin(), images.end(), comparator);
-
-            for(int i = 0; i < 1024; i++)
-            for (auto& image : images)
-            {
-                static size_t texNum = 0;
-
-                auto opt = atlas.insert(std::to_string(texNum++), image);
-                if (!opt.has_value())
-                    continue;
-
-            }
-        };
-    events.fileDrop.addListener(0, fileDrop);
     events.keyboard.addListener(0, keyboard);
     events.windowState.addListener(0, windowState);
     events.windowTransform.addListener(0, windowTransform);
@@ -309,7 +270,7 @@ int main()
         program.use();
         camera.apply(camUniforms);
         glUniformMatrix4fv(4, 1, GL_FALSE, glm::value_ptr(model));
-        atlas.bind(0);
+        texture.bind(0);
         sampler.bind(0);
         vao.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
