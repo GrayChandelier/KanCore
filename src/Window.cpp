@@ -24,6 +24,7 @@ namespace KanCore::Graphics
 		properties.setVisible(preset.window.visible);
 		properties.setResizable(preset.window.resizable);
 		properties.setDecorated(preset.window.decorated);
+	
 		context.makeCurrent();
 		context.setVSync(preset.graphics.vsync);
 

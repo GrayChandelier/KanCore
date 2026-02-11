@@ -30,26 +30,13 @@ int main()
 {
     using namespace KanCore;
 
-    using namespace KanCore::Utils;
-
-    Scheduler scheduler;
-    Stopwatch stopwatch;
-
-    auto func = [&stopwatch]() 
-        {
-            std::cout << "Elapsed: " << stopwatch.elapsedSinceStartMs() << " ms\n";
-        };
-    scheduler.schedule(milliseconds(200), func);
-    scheduler.schedule(milliseconds(400), func);
-    scheduler.schedule(milliseconds(600), func);
-    scheduler.schedule(milliseconds(800), func);
-    scheduler.schedule(milliseconds(1000), func);
-
     Graphics::WindowPreset preset;
-    preset.window.width = 1600;
-    preset.window.height = 900;
-    preset.graphics.glMajorVersion = 4;
+    preset.window.width = 2000;
+    preset.window.height = 1600;
+    preset.graphics.glMajorVersion = 5;
     preset.graphics.glMinorVersion = 5;
+
+ 
 
     Graphics::Window window("Engine test", preset);
     Input::Events events(window);
@@ -58,8 +45,9 @@ int main()
     Audio::SoundBufferPtr buffer = Audio::loadFromFile("resources/Sounds12.mp3");
     Audio::Sound sound(buffer);
 
-    sound.looped(true).play();
 
+    sound.looped(true).play();
+    
     // Слушатели событий
     Input::KeyEventListener keyboard = [&window, &events, &sound](Input::KeyboardEvent event)
         {
@@ -76,6 +64,7 @@ int main()
                 }
             }
         };
+
 
     Input::WindowStateListener windowState = [&window, &sound](Input::WindowStateEvent event)
         {
@@ -122,9 +111,10 @@ int main()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    
     // Текстура и объект
     Graphics::Image image;
-    image.loadFromFile("resources/screenshoot.png");
+    image.loadFromFile("resources/zombie_skull.png");
 
     OpenGL::GLTextureSampler sampler;
     sampler.setFilter(GL_NEAREST, GL_NEAREST);
@@ -158,6 +148,7 @@ int main()
     vao.enableAttribute(1);
     vao.attachElementBuffer(ebo);
 
+    
     // Шейдер основной сцены
     OpenGL::GLShaderProgram program;
     try
@@ -173,6 +164,7 @@ int main()
         std::cerr << "Failed to compile shader program: " << ex.what() << "\n";
         return 1;
     }
+
 
     // Fullscreen quad
     struct FullscreenQuad {
@@ -250,6 +242,7 @@ int main()
 
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
 
+    Utils::Stopwatch stopwatch;
     while (window)
     {
         float dt = window.metrics.getDeltaTimeSeconds();
@@ -300,7 +293,12 @@ int main()
         sharpenProgram.setUniform2f("uResolution",
             static_cast<float>(fbSize.width),
             static_cast<float>(fbSize.height));
-        sharpenProgram.setUniform1f("uSharpness", sharpness);
+
+        float sharpnessModifier = 10+ (stopwatch.elapsedSinceStartMs().count()/50 %4)*10;
+        sharpenProgram.setUniform1f("uSharpness", sharpness + sharpnessModifier);
+
+        sharpenProgram.setUniform1f("uTime", dt);
+
         sceneTexture.bind(0);
         fsQuad.draw();
 

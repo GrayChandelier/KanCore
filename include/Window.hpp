@@ -167,6 +167,7 @@ namespace KanCore::Graphics
             void setVisible(bool flag);
             void setResizable(bool flag);
             void setDecorated(bool flag);
+         
         };
 
         class Context

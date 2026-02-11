@@ -148,11 +148,13 @@
     <ClInclude Include="include\OpenGL\GLFramebuffer.hpp" />
     <ClInclude Include="include\OpenGL\GLShader.hpp" />
     <ClInclude Include="include\OpenGL\GLTexture.hpp" />
+    <ClInclude Include="include\OpenGL\GLTextureArray.hpp" />
     <ClInclude Include="include\OpenGL\GLTextureSampler.hpp" />
     <ClInclude Include="include\OpenGL\GLVertexArray.hpp" />
     <ClInclude Include="include\OpenGL\GLVertexBuffer.hpp" />
     <ClInclude Include="include\Scheduler.hpp" />
     <ClInclude Include="include\Stopwatch.hpp" />
+    <ClInclude Include="include\Text.hpp" />
     <ClInclude Include="include\Threads.hpp" />
     <ClInclude Include="include\Window.hpp" />
   </ItemGroup>
