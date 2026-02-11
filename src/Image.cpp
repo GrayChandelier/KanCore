@@ -45,11 +45,16 @@ namespace KanCore::Graphics::ImageLoaders
 			{ data, static_cast<size_t>(width) * static_cast<size_t>(height) * desiredChannels }
 		);
 		stbi_image_free(data);
+
+
+		std::cout << width << "x" << height << "\n\n";
 	}
 	Image loadFromFile(const std::string& path, uint8_t desiredChannels = 4)
 	{
 		Image image;
 		loadFromFile(image, path, desiredChannels);
+
+
 		return image;
 	}
 }

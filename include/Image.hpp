@@ -31,7 +31,9 @@ namespace KanCore::Graphics
 		Image(){}
 		Image(Image&) = delete;
 		Image(Image&& other) noexcept
-			: pixels(std::move(other.pixels)) 
+			: pixels(std::move(other.pixels)),
+			  channels(other.channels),
+			  size(other.size)
 		{}
 
 		Image& operator=(Image&& other) noexcept

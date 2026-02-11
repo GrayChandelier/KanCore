@@ -135,6 +135,7 @@
     <ClCompile Include="src\Image.cpp" />
     <ClCompile Include="src\Scheduler.cpp" />
     <ClCompile Include="src\Stopwatch.cpp" />
+    <ClCompile Include="src\TextureAtlas.cpp" />
     <ClCompile Include="src\Threads.cpp" />
     <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
@@ -155,6 +156,7 @@
     <ClInclude Include="include\Scheduler.hpp" />
     <ClInclude Include="include\Stopwatch.hpp" />
     <ClInclude Include="include\Text.hpp" />
+    <ClInclude Include="include\TextureAtlas.hpp" />
     <ClInclude Include="include\Threads.hpp" />
     <ClInclude Include="include\Window.hpp" />
   </ItemGroup>

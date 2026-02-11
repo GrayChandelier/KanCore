@@ -57,6 +57,31 @@ namespace KanCore::OpenGL
         DEPTH24_STENCIL8 = GL_UNSIGNED_INT_24_8
     };
 
+    inline OpenGL::TextureInternalFormat getInternalFormat(uint8_t channels)
+    {
+        switch (channels)
+        {
+        case 1: return OpenGL::TextureInternalFormat::R8;
+        case 2: return OpenGL::TextureInternalFormat::RG8;
+        case 3: return OpenGL::TextureInternalFormat::RGB8;
+        case 4: return OpenGL::TextureInternalFormat::RGBA8;
+        default: throw std::runtime_error("Unsupported channel count");
+        }
+    }
+
+    inline OpenGL::TextureDataFormat getDataFormat(uint8_t channels)
+    {
+        switch (channels)
+        {
+        case 1: return OpenGL::TextureDataFormat::R;
+        case 2: return OpenGL::TextureDataFormat::RG;
+        case 3: return OpenGL::TextureDataFormat::RGB;
+        case 4: return OpenGL::TextureDataFormat::RGBA;
+        default: throw std::runtime_error("Unsupported channel count");
+        }
+    }
+
+
     class GLTexture2D
     {
     private:

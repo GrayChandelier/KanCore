@@ -133,83 +133,9 @@ namespace KanCore::Graphics
 	using FontPtr = std::shared_ptr<Font>;
 	namespace FontLoaders
 	{
-		FontPtr loadFromFile(const std::string& path, bool monochrome = false)
+		FontPtr loadFromFile(const std::string& path, uint16_t pixelSize = 48, bool monochrome = false)
 		{
-			FT_Library ft;
-			if (FT_Init_FreeType(&ft))
-				throw std::runtime_error("Failed to init FreeType");
 
-			FT_Face face;
-			if (FT_New_Face(ft, path.c_str(), 0, &face))
-				throw std::runtime_error("Failed to load font face");
-
-			FT_Set_Pixel_Sizes(face, 0, 48);
-
-			std::vector<FontDetails::FontUnit> glyphs;
-			Size2Di maxRect{ 0, 0 };
-
-			FT_UInt glyphIndex;
-			FT_ULong charcode = FT_Get_First_Char(face, &glyphIndex);
-
-			while (glyphIndex != 0)
-			{
-				if (FT_Load_Glyph(face, glyphIndex, FT_LOAD_RENDER | (monochrome ? FT_LOAD_TARGET_MONO : 0)))
-				{
-					charcode = FT_Get_Next_Char(face, charcode, &glyphIndex);
-					continue;
-				}
-
-				FT_GlyphSlot slot = face->glyph;
-
-				maxRect.width = std::max<int>(maxRect.width, static_cast<int>(slot->bitmap.width));
-				maxRect.height = std::max<int>(maxRect.height, static_cast<int>(slot->bitmap.rows));
-
-				FontDetails::GlyphData gd;
-				gd.dataFormat = OpenGL::TextureDataFormat::R;
-				gd.dataType = OpenGL::TextureDataType::UBYTE;
-				gd.data = std::span(slot->bitmap.buffer, slot->bitmap.width * slot->bitmap.rows);
-
-				FontDetails::Glyph g;
-				g.size = Vec2f{ static_cast<float>(slot->bitmap.width), static_cast<float>(slot->bitmap.rows) };
-				g.bearing = Vec2f{ static_cast<float>(slot->bitmap_left), static_cast<float>(slot->bitmap_top) };
-				g.advance = static_cast<float>(slot->advance.x) / 64.0f;
-
-				glyphs.push_back(FontDetails::FontUnit{ static_cast<unicode_char>(charcode), g, gd });
-
-				charcode = FT_Get_Next_Char(face, charcode, &glyphIndex);
-			}
-
-
-			// Определяем количество слоёв для массива текстур
-			size_t layers = glyphs.size();
-
-			OpenGL::TextureInternalFormat format;
-			OpenGL::TextureDataFormat dataFormat;
-			OpenGL::TextureDataType dataType = OpenGL::TextureDataType::UBYTE;
-
-			if (monochrome)
-			{
-				format = OpenGL::TextureInternalFormat::R8;
-				dataFormat = OpenGL::TextureDataFormat::R;
-			}
-			else
-			{
-				format = OpenGL::TextureInternalFormat::RGBA8;
-				dataFormat = OpenGL::TextureDataFormat::RGBA;
-			}
-
-
-			// Создание объекта Font
-			FontDetails::FontLoader loader;
-			FontPtr font = loader.createFontObject(maxRect, layers, format, 0);
-
-			for (auto& glyph : glyphs)
-				loader.tryAddGlyph(*font, glyph);
-
-			FT_Done_Face(face);
-			FT_Done_FreeType(ft);
-
-			return font;
 		}
 
 	}
