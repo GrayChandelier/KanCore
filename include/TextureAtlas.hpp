@@ -13,6 +13,8 @@
 
 namespace KanCore::Graphics
 {
+    using TextureKey = uint32_t;
+
     struct UVRect
     {
         Vec2f pos;
@@ -107,13 +109,14 @@ namespace KanCore::Graphics
     class ITextureAtlas
     {
     public:
-        virtual std::optional<UVRect> getTextureUV(const std::string& textureName) const noexcept = 0;
+        virtual std::optional<UVRect> getTextureUV(TextureKey textureKey) const noexcept = 0;
         virtual void bind(uint8_t textureSlot = 0) const noexcept = 0;
         virtual ~ITextureAtlas() noexcept = default;
     };
 
     using PackingStategy = TextureAtlasDetails::IPackingStrategy;
-    using ImageList = std::vector<std::pair<std::string, Image>>;
+    using ImageList = std::vector<std::pair<TextureKey, Image>>;
+
 
     class TextureAtlas2D : public ITextureAtlas
     {
@@ -121,8 +124,8 @@ namespace KanCore::Graphics
         OpenGL::GLTexture2D texture;
         const Size2Di atlasSize;
         const OpenGL::TextureInternalFormat format;
-        using TextureName = std::string;
-        std::unordered_map<TextureName, UVRect> UVRects;
+
+        std::unordered_map<TextureKey, UVRect> UVRects;
 
     public:
         TextureAtlas2D(Size2Di size, OpenGL::TextureInternalFormat format,
@@ -130,7 +133,7 @@ namespace KanCore::Graphics
             std::unique_ptr<PackingStategy> packingStrategy = nullptr,
             uint8_t paddingPx = 0);
 
-        std::optional<UVRect> getTextureUV(const std::string& textureName) const noexcept override;
+        std::optional<UVRect> getTextureUV(TextureKey textureKey) const noexcept override;
         void bind(uint8_t textureSlot = 0) const noexcept override;
     };
 
@@ -140,19 +143,19 @@ namespace KanCore::Graphics
         OpenGL::GLTexture2D texture;
         const Size2Di atlasSize;
         const OpenGL::TextureInternalFormat format;
-        using TextureName = std::string;
-        std::unordered_map<TextureName, UVRect> UVRects;
+    
+        std::unordered_map<TextureKey, UVRect> UVRects;
         std::unique_ptr<PackingStategy> strategy;
 
     public:
         DynamicTextureAtlas2D(Size2Di size, OpenGL::TextureInternalFormat format,
-            std::unique_ptr<PackingStategy> packingStrategy,
+            std::unique_ptr<PackingStategy> packingStrategy = nullptr,
             uint8_t paddingPx = 0);
 
-        std::optional<UVRect> getTextureUV(const std::string& textureName) const noexcept override;
+        std::optional<UVRect> getTextureUV(TextureKey textureKey) const noexcept override;
         void bind(uint8_t textureSlot = 0) const noexcept override;
 
-        std::optional<UVRect> insert(const std::string& textureName, const Image& image);
+        std::optional<UVRect> insert(TextureKey textureKey, const Image& image);
     };
 
 } 

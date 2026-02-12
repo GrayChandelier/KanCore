@@ -136,6 +136,12 @@ namespace KanCore::OpenGL
                 width,
                 height
             );
+
+            
+            if (!textureId)
+                throw std::runtime_error("Failed to create GLTexture2D");
+            
+               
         }
 
         void updateRegion(

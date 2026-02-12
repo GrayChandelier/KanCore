@@ -7,13 +7,34 @@
 #include <iostream>
 namespace KanCore::Graphics::ImageDetails
 {
-	void fillImage(Image& target, Size2Di size, uint8_t channels, std::span<uint8_t> pixels)
+	int getChannelsCount(PixelFormat format)
 	{
-		target.size = size;
-		target.channels = channels;
+		switch (format)
+		{
+		case  PixelFormat::RGB8:  return 3;
+		case  PixelFormat::BGR8:  return 3;
+		case  PixelFormat::RGBA8: return 4;
+		case  PixelFormat::BGRA8: return 4;
+		case  PixelFormat::Mono8: return 1;
+		default:
+			throw std::invalid_argument("Unknown PixelFormat");
+		}
+	}
 
-		target.pixels.reserve(pixels.size());
-		target.pixels.insert(target.pixels.end(), pixels.begin(), pixels.end());
+	void fillImage(Image& target, Size2Di size, PixelFormat format, std::span<uint8_t> pixels)
+	{
+		size_t expected = size.width * size.height * getChannelsCount(format);
+		if (pixels.size() != expected)
+			throw std::runtime_error("Bad image data size");
+
+		target.size = size;
+		target.format = format;
+
+		target.pixels.clear();
+		target.pixels.resize(pixels.size());
+
+		std::memcpy(target.pixels.data(), pixels.data(), pixels.size());
+
 	}
 
 }
@@ -26,8 +47,7 @@ namespace KanCore::Graphics::ImageLoaders
 			throw std::invalid_argument("Failed to load image: empty file path");
 
 		int width, height, channels;
-
-		stbi_set_flip_vertically_on_load(true);
+	
 		unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, desiredChannels);
 
 		if (!data)
@@ -39,15 +59,23 @@ namespace KanCore::Graphics::ImageLoaders
 			);
 		}
 
-		Graphics::ImageDetails::fillImage(image, Size2Di{ static_cast<size_t>(width), 
-			static_cast<size_t>(height) }, 
-			desiredChannels, 
-			{ data, static_cast<size_t>(width) * static_cast<size_t>(height) * desiredChannels }
-		);
+		PixelFormat format;
+		switch (desiredChannels)
+		{
+			case 1: format = PixelFormat::Mono8; break;
+			case 3: format = PixelFormat::RGB8; break;
+			case 4: format = PixelFormat::RGBA8; break;
+			default: throw std::runtime_error("Bad image desired channels (choose 1, 3 or 4 for Mono, RGB or RGBA)");
+		}
+
+		Graphics::ImageDetails::fillImage(image, 
+										  Size2Di{ static_cast<size_t>(width), static_cast<size_t>(height) }, 
+										  format, 
+			                              { data, static_cast<size_t>(width) * static_cast<size_t>(height) * desiredChannels });
+
 		stbi_image_free(data);
 
 
-		std::cout << width << "x" << height << "\n\n";
 	}
 	Image loadFromFile(const std::string& path, uint8_t desiredChannels = 4)
 	{

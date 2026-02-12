@@ -9,14 +9,18 @@
 #include "include/Audio.hpp"
 #include "include/Camera.hpp"
 #include "include/Image.hpp"
+#include "include/Font.hpp"
+
 #include <glm/gtc/type_ptr.hpp>
 #include <fstream>
 #include <algorithm> // std::clamp
+#include <unordered_set>
 
 #include "include/Threads.hpp"
 #include "include/Scheduler.hpp"
 #include "include/Stopwatch.hpp"
 #include "include/TextureAtlas.hpp"
+
 std::string readFile(const std::string& path)
 {
     std::ifstream file(path);
@@ -29,6 +33,7 @@ std::string readFile(const std::string& path)
 
 int main()
 {
+    
     using namespace KanCore;
 
     Graphics::WindowPreset preset;
@@ -49,6 +54,19 @@ int main()
 
     sound.looped(true).play();
 
+    const std::unordered_set<Graphics::unicode_char> emojiWhitelist = {
+    0x1F602, 0x2764, 0x1F60D, 0x1F622, 0x1F60E, 0x1F44D, 0x1F44E
+    };
+
+    Graphics::CharacterFilter unicodeFilter = [&emojiWhitelist](Graphics::unicode_char candidate) -> bool
+        {
+            if (candidate <= 255 || emojiWhitelist.contains(candidate))
+                return true;
+            else
+                return false;
+        };
+
+    Graphics::FontPtr fontPtr = Graphics::FontLoaders::loadFromFile("resources/segoe-ui-emoji_0.ttf", 96, false, unicodeFilter);
 
 
     // Слушатели событий
@@ -135,13 +153,16 @@ int main()
 
     // VAO для квадрата
     struct Vertex { Vec3f position; Vec2f texCoord; };
+
     Vertex vertices[] = {
-        {{-0.5f, -0.5f, 0.f}, {0.f, 0.f}},
-        {{ 0.5f, -0.5f, 0.f}, {1.f, 0.f}},
-        {{ 0.5f,  0.5f, 0.f}, {1.f, 1.f}},
-        {{-0.5f,  0.5f, 0.f}, {0.f, 1.f}}
+        {{-0.5f, -0.5f, 0.f}, {0.f, 1.f}},   // левый нижний
+        {{ 0.5f, -0.5f, 0.f}, {1.f, 1.f}},   // правый нижний
+        {{ 0.5f,  0.5f, 0.f}, {1.f, 0.f}},   // правый верхний
+        {{-0.5f,  0.5f, 0.f}, {0.f, 0.f}}    // левый верхний
     };
-    GLuint indices[] = { 0,1,2, 2,3,0 };
+
+
+    GLuint indices[] = { 0, 1, 2,   2, 3, 0 };
 
     OpenGL::GLStaticVBO<Vertex> vbo(vertices);
     OpenGL::GLStaticVBO<GLuint> ebo(indices);
@@ -270,7 +291,9 @@ int main()
         program.use();
         camera.apply(camUniforms);
         glUniformMatrix4fv(4, 1, GL_FALSE, glm::value_ptr(model));
-        texture.bind(0);
+        //texture.bind(0);
+        fontPtr->use(0);
+
         sampler.bind(0);
         vao.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);

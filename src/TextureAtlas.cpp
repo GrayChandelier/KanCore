@@ -3,9 +3,29 @@
 
 namespace KanCore::Graphics
 {
+    namespace //anonymous namespace
+    {
+        OpenGL::TextureDataFormat getGLPixelFormat(PixelFormat format)
+        {
+            switch (format)
+            {
+            case PixelFormat::RGB8: return OpenGL::TextureDataFormat::RGB;
+            case PixelFormat::BGR8: return OpenGL::TextureDataFormat::BGR;
+
+            case PixelFormat::RGBA8: return OpenGL::TextureDataFormat::RGBA;
+            case PixelFormat::BGRA8: return OpenGL::TextureDataFormat::BGRA;
+
+            case PixelFormat::Mono8: return OpenGL::TextureDataFormat::R;
+
+            default: throw std::runtime_error("Bad image format");
+            }
+        }
+    }
+
+
+
     namespace TextureAtlasDetails
     {
-
         bool MaxRectsStrategy::contains(const FreeRect& outer, const FreeRect& inner) noexcept
         {
             return inner.x >= outer.x &&
@@ -137,8 +157,8 @@ namespace KanCore::Graphics
             static_cast<uint32_t>(size.height),
             paddingPx);
 
-        auto comparator = [](const std::pair<std::string, Image>& A,
-            const std::pair<std::string, Image>& B) -> bool
+        auto comparator = [](const std::pair<TextureKey, Image>& A,
+            const std::pair<TextureKey, Image>& B) -> bool
             {
                 uint64_t areaA = static_cast<uint64_t>(A.second.getSize().width) *
                     A.second.getSize().height;
@@ -151,20 +171,22 @@ namespace KanCore::Graphics
 
         for (auto& image : images)
         {
-            const std::string& name = image.first;
+            const TextureKey& key = image.first;
             Image& img = image.second;
 
             std::optional<TextureAtlasDetails::Rect2Di> rectOpt =
                 packingStrategy->tryAllocatePixelRect(img.getSize());
 
-            if (!rectOpt.has_value() || UVRects.contains(name))
+            if (!rectOpt.has_value() || UVRects.contains(key))
                 throw std::runtime_error("Failed to insert texture in atlas");
 
             TextureAtlasDetails::Rect2Di pixelRect = rectOpt.value();
             UVRect rect = TextureAtlasDetails::convertToUVRect(pixelRect, atlasSize);
-            UVRects.emplace(name, rect);
+            UVRects.emplace(key, rect);
 
-            OpenGL::TextureDataFormat dataFormat = OpenGL::getDataFormat(img.getChannels());
+
+            
+            OpenGL::TextureDataFormat dataFormat = getGLPixelFormat(img.getPixelFormat());
             OpenGL::TextureDataType dataType = OpenGL::TextureDataType::UBYTE;
 
             texture.updateRegion(0 /*level*/,
@@ -175,9 +197,9 @@ namespace KanCore::Graphics
         }
     }
 
-    std::optional<UVRect> TextureAtlas2D::getTextureUV(const std::string& textureName) const noexcept
+    std::optional<UVRect> TextureAtlas2D::getTextureUV(TextureKey textureKey) const noexcept
     {
-        auto it = UVRects.find(textureName);
+        auto it = UVRects.find(textureKey);
         if (it == UVRects.end())
             return std::nullopt;
         return std::make_optional(it->second);
@@ -201,16 +223,16 @@ namespace KanCore::Graphics
             throw std::runtime_error("Bad texture atlas size");
 
         if (!strategy)
-            throw std::runtime_error("Packing strategy is null");
+            strategy = std::make_unique<TextureAtlasDetails::MaxRectsStrategy>();
 
         strategy->reinitialize(static_cast<uint32_t>(size.width),
             static_cast<uint32_t>(size.height),
             paddingPx);
     }
 
-    std::optional<UVRect> DynamicTextureAtlas2D::getTextureUV(const std::string& textureName) const noexcept
+    std::optional<UVRect> DynamicTextureAtlas2D::getTextureUV(TextureKey textureKey) const noexcept
     {
-        auto it = UVRects.find(textureName);
+        auto it = UVRects.find(textureKey);
         if (it == UVRects.end())
             return std::nullopt;
         return std::make_optional(it->second);
@@ -221,11 +243,13 @@ namespace KanCore::Graphics
         texture.bind(textureSlot);
     }
 
-    std::optional<UVRect> DynamicTextureAtlas2D::insert(const std::string& textureName, const Image& image)
+    std::optional<UVRect> DynamicTextureAtlas2D::insert(TextureKey textureKey, const Image& image)
     {
-        if (UVRects.contains(textureName))
+        if (UVRects.contains(textureKey))
             return std::nullopt;
 
+        OpenGL::TextureDataFormat dataFormat = getGLPixelFormat(image.getPixelFormat());;
+        OpenGL::TextureDataType dataType = OpenGL::TextureDataType::UBYTE;
         const Size2Di imageSize = image.getSize();
         std::optional<TextureAtlasDetails::Rect2Di> rectOpt = strategy->tryAllocatePixelRect(imageSize);
 
@@ -234,10 +258,6 @@ namespace KanCore::Graphics
 
         TextureAtlasDetails::Rect2Di pixelRect = rectOpt.value();
         UVRect rect = TextureAtlasDetails::convertToUVRect(pixelRect, atlasSize);
-        UVRects.emplace(textureName, rect);
-
-        OpenGL::TextureDataFormat dataFormat = OpenGL::getDataFormat(image.getChannels());
-        OpenGL::TextureDataType dataType = OpenGL::TextureDataType::UBYTE;
 
         texture.updateRegion(0 /*level*/,
             pixelRect.x, pixelRect.y,
@@ -245,6 +265,7 @@ namespace KanCore::Graphics
             dataFormat, dataType,
             image.getData().data());
 
+        UVRects.emplace(textureKey, rect);
         return std::make_optional(rect);
     }
 

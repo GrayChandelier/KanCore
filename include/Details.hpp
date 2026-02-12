@@ -3,6 +3,19 @@
 
 namespace KanCore
 {
+    namespace Graphics
+    {
+        enum class PixelFormat : uint8_t
+        {
+            RGB8,
+            BGR8,
+            RGBA8,
+            BGRA8,
+            Mono8
+        };
+
+    }
+
     using Vec3f = glm::vec3;
     using Vec3i = glm::ivec3;
 
