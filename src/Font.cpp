@@ -95,15 +95,12 @@ namespace KanCore::Graphics
         unit.glyphData.dataType = OpenGL::TextureDataType::UBYTE;
         unit.glyphData.pixelFormat = format;
 
-        // √лиф Ч квадрат размером size x size
         unit.glyphDesc.size = { float(size), float(size) };
-        unit.glyphDesc.bearing = { 0.f, float(size * 1.125) }; // подн€т на высоту квадрата
-        unit.glyphDesc.advance = float(size * 1.25);          // шаг пера на ширину квадрата
+        unit.glyphDesc.bearing = { 0.f, float(size * 1.125) };
+        unit.glyphDesc.advance = float(size * 1.25);          
 
-        // UV будет рассчитан в tryAddGlyph при вставке в атлас
         unit.glyphDesc.uv = {};
 
-        // —пециальный код дл€ undefined character
         unit.unicode = 0xFFFF;
 
         tryAddGlyph(unit);
