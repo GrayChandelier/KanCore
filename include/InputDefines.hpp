@@ -169,10 +169,10 @@ namespace KanCore::Input
         MouseButton button;
 
         MouseAction action;
-        Vec2i cursorPosDelta;
-        Vec2i currentCursorPos;
+        Vec2f cursorPosDelta;
+        Vec2f currentCursorPos;
 
-        Vec2i scrollDelta;
+        Vec2f scrollDelta;
     };
 
     struct TextInputEvent

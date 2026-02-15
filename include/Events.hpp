@@ -27,6 +27,9 @@ namespace KanCore::Input
 		{
 		public:
 			virtual void notify(const MouseEvent& event) = 0;
+
+			//returns delta
+			virtual Vec2f updateCursorPos(const Vec2f cursorPos) = 0;
 			~IMouse() = default;
 		};
 
@@ -78,10 +81,17 @@ namespace KanCore::Input
 		class Mouse : public IMouse
 		{
 		private:
+			Vec2f savedCursorPos{0,0};
 			Graphics::Window& bindedWindow;
 
 			std::unordered_map<EventDetails::MouseListenerID, Input::MouseEventListener> listeners;
 			void notify(const MouseEvent& event) override;
+			Vec2f updateCursorPos(const Vec2f cursorPos) override
+			{
+				Vec2f delta = cursorPos - savedCursorPos;
+				savedCursorPos = cursorPos;
+				return delta;
+			}
 		public:
 			Mouse(Graphics::Window& bindedWindow) : bindedWindow(bindedWindow) {}
 
@@ -143,6 +153,7 @@ namespace KanCore::Input
 
 		void keyboardCallback(int key, int scancode, int action, int mods);
 		void mouseCallback(int button, int action, int mods);
+		void cursorPosCallback(double xpos, double ypos);
 		void textInputCallback(unsigned int codepoint);
 		void windowSizeCallback(int width, int height);
 		void windowPosCallback(int xpos, int ypos);

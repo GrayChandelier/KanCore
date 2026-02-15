@@ -12,6 +12,10 @@ namespace KanCore::OpenGL
 		GLuint samplerId = 0;
 
 	public:
+		static void unbind(GLuint unit) noexcept
+		{
+			glBindSampler(unit, 0);
+		}
 		void bind(GLuint unit) const noexcept
 		{
 			glBindSampler(unit, samplerId);

@@ -31,7 +31,7 @@ namespace KanCore::Utils
 			output[4 * i + 0] = source[i];
 			output[4 * i + 1] = source[i];
 			output[4 * i + 2] = source[i];
-			output[4 * i + 3] = 255;
+			output[4 * i + 3] = source[i];
 		}
 
 		return output;

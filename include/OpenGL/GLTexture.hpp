@@ -210,6 +210,7 @@ namespace KanCore::OpenGL
             glBindTextureUnit(slot, textureId);
         }
 
+
         GLTexture2D(const GLTexture2D&) = delete;
         GLTexture2D& operator=(const GLTexture2D&) = delete;
 

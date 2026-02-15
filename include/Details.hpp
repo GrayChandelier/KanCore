@@ -14,6 +14,8 @@ namespace KanCore
             Mono8
         };
 
+   
+
     }
 
     using Vec3f = glm::vec3;

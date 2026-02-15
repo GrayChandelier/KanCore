@@ -9,7 +9,8 @@
 #include "include/Audio.hpp"
 #include "include/Camera.hpp"
 #include "include/Image.hpp"
-#include "include/Font.hpp"
+#include "include/Text.hpp"
+
 
 #include <glm/gtc/type_ptr.hpp>
 #include <fstream>
@@ -54,19 +55,16 @@ int main()
 
     sound.looped(true).play();
 
-    const std::unordered_set<Graphics::unicode_char> emojiWhitelist = {
+    const std::unordered_set<Graphics::unicode_char> whitelistCharacters = {
     0x1F602, 0x2764, 0x1F60D, 0x1F622, 0x1F60E, 0x1F44D, 0x1F44E
     };
 
-    Graphics::CharacterFilter unicodeFilter = [&emojiWhitelist](Graphics::unicode_char candidate) -> bool
+    Graphics::CharacterFilter unicodeFilter = [&whitelistCharacters](Graphics::unicode_char candidate) -> bool
         {
-            if (candidate <= 255 || emojiWhitelist.contains(candidate))
-                return true;
-            else
-                return false;
+            return candidate <= 255 || whitelistCharacters.contains(candidate);
         };
 
-    Graphics::FontPtr fontPtr = Graphics::FontLoaders::loadFromFile("resources/segoe-ui-emoji_0.ttf", 96, false, unicodeFilter);
+    Graphics::FontPtr fontPtr = Graphics::FontLoaders::loadFromFile("resources/segoe-ui-emoji_0.ttf", 64, false, unicodeFilter);
 
 
     // Слушатели событий
@@ -88,6 +86,20 @@ int main()
             }
         };
 
+    Input::MouseEventListener mouse = [&camera](Input::MouseEvent event)
+        {
+            if (event.action != Input::MouseAction::Moved) return;
+
+
+            constexpr float sensitivity = 0.18f;  
+            constexpr float maxPitchDeg = 89.0f;  
+            Vec2f delta = event.cursorPosDelta;
+
+        
+        };
+
+
+
 
     Input::WindowStateListener windowState = [&window, &sound](Input::WindowStateEvent event)
         {
@@ -108,11 +120,30 @@ int main()
             }
         };
 
-    // Переменные для эффектов
-    float blurStrength = 0.0f;   // 0..10
-    float sharpness = 1.0f;      // 0..30
+    Graphics::FormattedText text;
+    text.attachFont(0, fontPtr);
 
-    Input::WindowTransformListener windowTransform = [&camera, &window, &blurStrength, &sharpness](Input::WindowTransformEvent event)
+    Graphics::UString str = UR"(KanCore Framework
+
+Emoji: 😂😍😢😎👍👎❤
+
+§1Color code: \§1 
+§2Color code: \§2
+§3Color code: \§3
+§4Color code: \§4
+§5Color code: \§5
+§6Color code: \§6
+§7Color code: \§7
+§8Color code: \§8
+§9Color code: \§9
+)";
+
+    uint16_t textSize = 128;
+    text.setText(str, textSize, Vec2f(0, 100.f));
+
+
+
+    Input::WindowTransformListener windowTransform = [&camera, &window](Input::WindowTransformEvent event)
         {
             if (event.transformation == Input::WindowTransformation::FramebufferResized)
             {
@@ -126,6 +157,7 @@ int main()
 
 
     events.keyboard.addListener(0, keyboard);
+    events.mouse.addListener(0, mouse);
     events.windowState.addListener(0, windowState);
     events.windowTransform.addListener(0, windowTransform);
 
@@ -193,76 +225,6 @@ int main()
         return 1;
     }
 
-
-    // Fullscreen quad
-    struct FullscreenQuad {
-        OpenGL::GLVertexArray vao;
-        struct Vertex { Vec2f pos; Vec2f uv; };
-        FullscreenQuad() {
-            Vertex verts[4] = {
-                {{-1,-1}, {0,0}},
-                {{ 1,-1}, {1,0}},
-                {{ 1, 1}, {1,1}},
-                {{-1, 1}, {0,1}}
-            };
-            OpenGL::GLStaticVBO<Vertex> vbo(verts);
-            vao.attachVertexBuffer(0, vbo);
-            vao.setAttributeFormat(0, 2, OpenGL::GLAttributeType::FLOAT, false, offsetof(Vertex, pos));
-            vao.setAttributeBinding(0, 0);
-            vao.enableAttribute(0);
-            vao.setAttributeFormat(1, 2, OpenGL::GLAttributeType::FLOAT, false, offsetof(Vertex, uv));
-            vao.setAttributeBinding(1, 0);
-            vao.enableAttribute(1);
-        }
-        void draw() const 
-        {
-            vao.bind();
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        }
-    } fsQuad;
-
-    // Текстуры и framebuffer'ы для пост-обработки
-    auto fbSize = window.transform.getFramebufferSize();
-    OpenGL::GLTexture2D sceneTexture(fbSize.width, fbSize.height, OpenGL::TextureInternalFormat::RGBA8);
-    OpenGL::GLTexture2D blurTexture(fbSize.width, fbSize.height, OpenGL::TextureInternalFormat::RGBA8);
-
-    OpenGL::GLFramebuffer fbScene;
-    fbScene.attach(OpenGL::FramebufferAttachment::Color0, sceneTexture);
-
-    OpenGL::GLFramebuffer fbBlur;
-    fbBlur.attach(OpenGL::FramebufferAttachment::Color0, blurTexture);
-
-    // Шейдеры пост-обработки
-    OpenGL::GLShaderProgram postProgram;
-    try
-    {
-        std::string vert = readFile("resources/postprocessing.vert");
-        std::string blurFrag = readFile("resources/blur.frag");
-        OpenGL::GLShader v(vert, OpenGL::GLShaderType::VERTEX);
-        OpenGL::GLShader f(blurFrag, OpenGL::GLShaderType::FRAGMENT);
-        OpenGL::linkShaderProgram(postProgram, { v, f });
-    }
-    catch (const OpenGL::GLShaderException& ex)
-    {
-        std::cerr << "Failed to compile post-processing program: " << ex.what() << "\n";
-        return 1;
-    }
-
-    OpenGL::GLShaderProgram sharpenProgram;
-    try
-    {
-        std::string vert = readFile("resources/postprocessing.vert");
-        std::string frag = readFile("resources/sharpen.frag");
-        OpenGL::GLShader v(vert, OpenGL::GLShaderType::VERTEX);
-        OpenGL::GLShader f(frag, OpenGL::GLShaderType::FRAGMENT);
-        OpenGL::linkShaderProgram(sharpenProgram, { v, f });
-    }
-    catch (const OpenGL::GLShaderException& ex)
-    {
-        std::cerr << "Failed to compile sharpen program: " << ex.what() << "\n";
-        return 1;
-    }
-
     // Камерные uniform-локации
     Graphics::CameraUniforms camUniforms;
     camUniforms.projectionUniformLocation = 0;
@@ -271,69 +233,58 @@ int main()
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
 
     Utils::Stopwatch stopwatch;
+
+    constexpr float cameraSpeed = 1.f;
+
+
+    glClearColor(0.7f, 0.9f, 1.f, 1.f);
+
+
+    Utils::Scheduler scheduler;
+
+    std::function<void()> nextTask;
+
+    auto task = [&nextTask, &scheduler, &camera]()
+        {
+            camera.controller.rotate(Graphics::CameraRotationAxis::AbsoluteY, 10);
+            scheduler.schedule(std::chrono::milliseconds(50), nextTask);
+        };
+    nextTask = task;
+
+    scheduler.schedule(std::chrono::seconds(1), nextTask);
+
     while (window)
     {
-        float dt = window.metrics.getDeltaTimeSeconds();
+        const float dt = window.metrics.getDeltaTimeSeconds();
 
-        // Управление эффектами
-        if (events.keyboard.isKeyPressed(Input::KeyboardKey::X)) blurStrength += 3.0f * dt;
-        if (events.keyboard.isKeyPressed(Input::KeyboardKey::Z)) blurStrength -= 3.0f * dt;
-        blurStrength = std::clamp(blurStrength, 0.0f, 10.0f);
+       
+        if (events.keyboard.isKeyPressed(Input::KeyboardKey::W))
+        {
+            camera.controller.move({ 0, 0, cameraSpeed * window.metrics.getDeltaTimeSeconds() });
+        }
+        else if (events.keyboard.isKeyPressed(Input::KeyboardKey::S))
+        {
+            camera.controller.move({ 0, 0, -cameraSpeed * window.metrics.getDeltaTimeSeconds() });
+        }
 
-        if (events.keyboard.isKeyPressed(Input::KeyboardKey::E)) sharpness += 10.0f * dt;
-        if (events.keyboard.isKeyPressed(Input::KeyboardKey::Q)) sharpness -= 10.0f * dt;
-        sharpness = std::clamp(sharpness, 0.0f, 30.0f);
-
-        // 1. Рендерим сцену в fbScene
-        fbScene.bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         program.use();
         camera.apply(camUniforms);
         glUniformMatrix4fv(4, 1, GL_FALSE, glm::value_ptr(model));
-        //texture.bind(0);
-        fontPtr->use(0);
+        texture.bind(0);
+
 
         sampler.bind(0);
         vao.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
-        // 2. Горизонтальное размытие → blurTexture
-        fbBlur.bind();
-        glClear(GL_COLOR_BUFFER_BIT);
-        postProgram.use();
-        postProgram.setUniform2f("uDirection", 1.0f, 0.0f);
-        postProgram.setUniform2f("uResolution", static_cast<float>(fbSize.width), static_cast<float>(fbSize.height));
-        postProgram.setUniform1f("uStrength", blurStrength);
-        sceneTexture.bind(0);
-        fsQuad.draw();
 
-        // 3. Вертикальное размытие → обратно в sceneTexture
-        fbScene.bind();
-        glClear(GL_COLOR_BUFFER_BIT);
-        postProgram.setUniform2f("uDirection", 0.0f, 1.0f);
-        blurTexture.bind(0);
-        fsQuad.draw();
 
-        // 4. Применяем sharpen и выводим на экран
-        OpenGL::GLFramebuffer::bindDefault();
-        glClear(GL_COLOR_BUFFER_BIT);
 
-        sharpenProgram.use();
-        sharpenProgram.setUniform2f("uResolution",
-            static_cast<float>(fbSize.width),
-            static_cast<float>(fbSize.height));
-
-        float sharpnessModifier = 10+ (stopwatch.elapsedSinceStartMs().count()/50 %4)*10;
-        sharpenProgram.setUniform1f("uSharpness", sharpness);
-
-        sharpenProgram.setUniform1f("uTime", dt);
-
-        sceneTexture.bind(0);
-        fsQuad.draw();
-
-        events.pollEvents();
+        text.draw(window.transform.getFramebufferSize().width, window.transform.getFramebufferSize().height);
+        events.pollEvents();   
         window.endFrame();
+
     }
 
     return 0;

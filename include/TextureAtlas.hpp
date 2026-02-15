@@ -1,6 +1,8 @@
 #pragma once
 
 #include "OpenGL/GLTexture.hpp"
+#include "OpenGL/GLTextureSampler.hpp"
+
 #include "Details.hpp"
 #include "Image.hpp"
 #include <optional>

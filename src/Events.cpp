@@ -147,6 +147,13 @@ namespace KanCore::Input
 		GLFWwindow* context = Graphics::WindowDetails::getNativeWindow(bindedWindow);
 		glfwSetWindowUserPointer(context, this);
 
+		{
+			double xpos, ypos;
+			glfwGetCursorPos(context, &xpos, &ypos);
+			Vec2f cursorPos = { static_cast<float>(xpos), static_cast<float>(ypos) };
+			static_cast<EventDetails::IMouse&>(mouse).updateCursorPos(cursorPos);
+		}
+
 		// Keyboard
 		glfwSetKeyCallback(context, [](GLFWwindow* w, int key, int sc, int action, int mods)
 			{
@@ -159,6 +166,12 @@ namespace KanCore::Input
 			{
 				Events* self = reinterpret_cast<Events*>(glfwGetWindowUserPointer(w));
 				if (self) self->mouseCallback(button, action, mods);
+			});
+		//Cursor
+		glfwSetCursorPosCallback(context, [](GLFWwindow* w, double xpos, double ypos)
+			{
+				Events* self = reinterpret_cast<Events*>(glfwGetWindowUserPointer(w));
+				if (self) self->cursorPosCallback(xpos, ypos);
 			});
 
 		// Text input
@@ -241,12 +254,29 @@ namespace KanCore::Input
 		event.action = (action == GLFW_PRESS) ? MouseAction::JustPressed
 			: MouseAction::JustReleased;
 
+		
 		double xpos, ypos;
+
+		
 		GLFWwindow* context = Graphics::WindowDetails::getNativeWindow(bindedWindow);
 		glfwGetCursorPos(context, &xpos, &ypos);
-		event.currentCursorPos = Vec2i{ int(xpos), int(ypos) };
+		event.currentCursorPos = Vec2f{ static_cast<float>(xpos), static_cast<float>(ypos) };
 
 		static_cast<EventDetails::IMouse&>(mouse).notify(event);
+	}
+	void Events::cursorPosCallback(double xpos, double ypos)
+	{
+
+		MouseEvent event{};
+		event.action = MouseAction::Moved;
+		event.currentCursorPos = { static_cast<float>(xpos), static_cast<float>(ypos) };
+
+		EventDetails::IMouse& _mouse = static_cast<EventDetails::IMouse&>(mouse);
+
+		Vec2f cursorDelta = _mouse.updateCursorPos(Vec2f{ static_cast<float>(xpos), static_cast<float>(ypos) });
+		event.cursorPosDelta = { cursorDelta.x, cursorDelta.y };
+
+		_mouse.notify(event);
 	}
 
 	void Events::textInputCallback(unsigned int codepoint)

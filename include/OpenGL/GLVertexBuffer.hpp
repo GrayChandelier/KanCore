@@ -139,7 +139,12 @@ namespace KanCore::OpenGL
 		}
 	public:
 		GLStaticVBO(GLStaticVBO&) = delete;
-		GLStaticVBO(GLStaticVBO&&) noexcept = default;
+		GLStaticVBO(GLStaticVBO&& other) noexcept
+			: vbo(std::move(other.vbo)),
+			sizeInBytes(other.sizeInBytes),
+			flags(other.flags)
+		{
+		}
 
 		GLStaticVBO(std::span<T> data, GLStorageFlags flags = GLStorageFlags::NONE) 
 			: vbo(),
@@ -205,6 +210,7 @@ namespace KanCore::OpenGL
 	private:
 		Details::GL_VBO_RAII vbo;
 		size_t sizeInBytes = 0;
+		GLUsage usage;
 
 		GLuint getBufferId() const noexcept override
 		{
@@ -212,23 +218,36 @@ namespace KanCore::OpenGL
 		}
 	public:
 		GLDynamicVBO<T>(GLDynamicVBO&) = delete;
-		GLDynamicVBO<T>(GLDynamicVBO&&) noexcept = default;
-
-		GLDynamicVBO<T>(std::span<T> data, GLUsage usage) : vbo()
+		GLDynamicVBO<T>(GLDynamicVBO&& other) noexcept
+			: vbo(std::move(other.vbo)),
+			sizeInBytes(other.sizeInBytes),
+			usage(other.usage)
 		{
-			sizeInBytes = data.size_bytes();
-			glNamedBufferData(vbo.getId(), sizeInBytes, data.data(), usage);
 		}
 
-		GLDynamicVBO<T>(size_t sizeInBytes, GLUsage usage) : vbo()
+		GLDynamicVBO<T>(std::span<T> data, GLUsage usage) 
+			: vbo(), usage(usage), sizeInBytes(data.size_bytes())
 		{
-			this->sizeInBytes = sizeInBytes;
-			glNamedBufferData(vbo.getId(), sizeInBytes, nullptr, usage);
+			resize(sizeInBytes);
+		}
+
+		GLDynamicVBO<T>(GLUsage usage) : vbo(), usage(usage)
+		{ }
+
+		GLDynamicVBO<T>(size_t sizeInBytes, GLUsage usage) 
+			: vbo(), usage(usage), sizeInBytes(sizeInBytes)
+		{
+			resize(sizeInBytes);
 		}
 
 		T* getMappingPointer(GLMapAccess access = GLMapAccess::READ_AND_WRITE)
 		{
-			return static_cast<T*>(glMapNamedBuffer(vbo.getId(), access));
+			return static_cast<T*>(glMapNamedBuffer(vbo.getId(), static_cast<GLenum>(access)));
+		}
+		void resize(size_t sizeInBytes)
+		{
+			this->sizeInBytes = sizeInBytes;
+			glNamedBufferData(vbo.getId(), sizeInBytes, nullptr, static_cast<GLenum>(usage));
 		}
 		void unmap()
 		{

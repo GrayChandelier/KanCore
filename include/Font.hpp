@@ -4,6 +4,7 @@
 #include "Utils.hpp"
 #include "../include/TextureAtlas.hpp"
 
+
 #include <unordered_map>
 #include <optional>
 #include <span>
@@ -29,6 +30,7 @@ namespace KanCore::Graphics
             Vec2f bearing;
             float advance;
             UVRect uv;
+            bool colorful = false;
         };
 
         struct GlyphData
@@ -65,22 +67,30 @@ namespace KanCore::Graphics
     class Font final : public FontDetails::IFont, public FontDetails::IFontLoadable
     {
     private:
+        
         Graphics::DynamicTextureAtlas2D atlas;
         std::unordered_map<unicode_char, FontDetails::Glyph> glyphs;
+
+        size_t characterPixelSize;
 
     public:
         explicit Font(
             OpenGL::TextureInternalFormat atlasFormat,
-            Size2Di atlasSize
+            Size2Di atlasSize, size_t characterPixelSize
         );
 
         std::optional<FontDetails::Glyph> getGlyph(unicode_char character) const noexcept override;
         bool tryAddGlyph(const FontDetails::FontUnit& unit) override;
+
+        size_t getCharacterPixelSize() const noexcept;
+
+        void initUndefinedCharacter(uint16_t size, PixelFormat format, uint8_t bytesPerPixel);
+
         void use(uint8_t fontSlot) const noexcept override;
 
         static std::shared_ptr<Font> createShared(
             OpenGL::TextureInternalFormat atlasFormat,
-            Size2Di atlasSize
+            Size2Di atlasSize, size_t characterPixelSize
         );
     };
 
